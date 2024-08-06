@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
-import { User, UserSchemaType } from "../../models/User";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { Request, Response } from "express";
+import { User } from "../../models/User";
+import { generateAccessToken, generateRefreshToken } from "./generateToken";
 
 type LoginCredentials = {
   email: string;
@@ -30,16 +30,8 @@ export const login = async (
     });
   }
 
-  const accessToken = jwt.sign(
-    { username: user.username },
-    process.env.ACCESS_TOKEN_SECRET!,
-    { expiresIn: "10m" }
-  );
-  const refreshToken = jwt.sign(
-    { username: user.username },
-    process.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: "1h" }
-  );
+  const accessToken = generateAccessToken({ username: user.username });
+  const refreshToken = generateRefreshToken({ username: user.username });
 
   try {
     await User.updateOne(

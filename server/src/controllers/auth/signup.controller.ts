@@ -37,29 +37,15 @@ export const signup = async (
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  const refreshToken = jwt.sign(
-    { username },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: "20s",
-    }
-  );
-  const accessToken = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m",
-  });
-
   const user = new User({
     ...req.body,
     password: hashedPassword,
-    refresh_token: refreshToken,
   });
 
   try {
     await user.save();
     return res.status(201).json({
       message: "User created successfully",
-      accessToken,
-      refreshToken,
     });
   } catch (error) {
     return res.status(500).json({
