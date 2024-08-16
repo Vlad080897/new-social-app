@@ -1,50 +1,57 @@
 import bcrypt from "bcrypt";
+
 import { Request, Response } from "express";
+import { HttpError } from "../../error";
 import { User } from "../../models/User";
-import { generateAccessToken, generateRefreshToken } from "./generateToken";
+import { withErrors } from "../../utils/withErrors";
+import { withTransactions } from "../../utils/withTransactions";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/generateToken";
+import { UpdateWriteOpResult } from "mongoose";
 
 type LoginCredentials = {
   email: string;
   password: string;
 };
 
-export const login = async (
-  req: Request<any, any, LoginCredentials>,
-  res: Response
-) => {
-  const { email, password } = req.body;
+export const login = withErrors(
+  withTransactions(
+    async (
+      req: Request<any, any, LoginCredentials>,
+      res: Response,
+      session: any
+    ) => {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
 
-  const user = await User.findOne({ email });
+      if (!user) {
+        throw new HttpError(404, "Email or password are incorrect");
+      }
 
-  if (!user) {
-    return res.status(404).json({
-      message: "Email or password are incorrect",
-    });
-  }
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
-  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        throw new HttpError(404, "Email or password are incorrect");
+      }
+      const accessToken = generateAccessToken({ username: user.username });
+      const refreshToken = generateRefreshToken({ username: user.username });
 
-  if (!isPasswordCorrect) {
-    return res.status(404).json({
-      message: "Email or password are incorrect",
-    });
-  }
+      const result: UpdateWriteOpResult = await user.updateOne(
+        { refresh_token1: refreshToken },
+        { session }
+      );
 
-  const accessToken = generateAccessToken({ username: user.username });
-  const refreshToken = generateRefreshToken({ username: user.username });
+      if (!result.acknowledged) {
+        throw new HttpError(500, "Something went wrong");
+      }
 
-  try {
-    await User.updateOne(
-      { email: user.email },
-      { $set: { refresh_token: refreshToken } }
-    );
-    return res.status(200).json({
-      accessToken,
-      refreshToken,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Something went wrong",
-    });
-  }
-};
+      return res.status(200).json({
+        accessToken,
+        refreshToken,
+      });
+    }
+  )
+);
+// );
