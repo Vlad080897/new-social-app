@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { generateAccessToken, generateRefreshToken } from "./generateToken";
+import { generateAccessToken, generateRefreshToken } from "../../utils/generateToken";
 
 const verify = <T extends {}>(token: string, secret: string): T => {
   return jwt.verify(token, secret) as T;
