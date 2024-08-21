@@ -1,57 +1,33 @@
-import bcrypt from "bcrypt";
-
 import { Request, Response } from "express";
-import { HttpError } from "../../error";
-import { User } from "../../models/User";
-import { withErrors } from "../../utils/withErrors";
-import { withTransactions } from "../../utils/withTransactions";
+import { ClientSession } from "mongoose";
+import { withWrappers } from "../../utils/withWrappers";
 import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../utils/generateToken";
-import { UpdateWriteOpResult } from "mongoose";
+  checkPassword,
+  checkUser,
+  generateTokens,
+  updateRefreshToken,
+} from "../../utils/loginUtils";
+import { LoginCredentials } from "../../types/auth";
 
-type LoginCredentials = {
-  email: string;
-  password: string;
-};
+export const login = withWrappers(
+  async (
+    req: Request<any, any, LoginCredentials>,
+    res: Response,
+    session: ClientSession
+  ) => {
+    const { email, password } = req.body;
 
-export const login = withErrors(
-  withTransactions(
-    async (
-      req: Request<any, any, LoginCredentials>,
-      res: Response,
-      session: any
-    ) => {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
+    const user = await checkUser(email);
 
-      if (!user) {
-        throw new HttpError(404, "Email or password are incorrect");
-      }
+    await checkPassword(password, user.password);
 
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const { access_token, refresh_token } = await generateTokens(user.username);
 
-      if (!isPasswordCorrect) {
-        throw new HttpError(404, "Email or password are incorrect");
-      }
-      const accessToken = generateAccessToken({ username: user.username });
-      const refreshToken = generateRefreshToken({ username: user.username });
+    await updateRefreshToken(user, refresh_token, session);
 
-      const result: UpdateWriteOpResult = await user.updateOne(
-        { refresh_token1: refreshToken },
-        { session }
-      );
-
-      if (!result.acknowledged) {
-        throw new HttpError(500, "Something went wrong");
-      }
-
-      return res.status(200).json({
-        accessToken,
-        refreshToken,
-      });
-    }
-  )
+    return res.status(200).json({
+      access_token,
+      refresh_token,
+    });
+  }
 );
-// );
