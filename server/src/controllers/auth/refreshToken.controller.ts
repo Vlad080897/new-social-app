@@ -1,56 +1,29 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { ClientSession, UpdateWriteOpResult } from "mongoose";
-import { HttpError } from "../../error";
-import { User } from "../../models/User";
+import { ClientSession } from "mongoose";
 import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../utils/generateToken";
+  checkToken,
+  checkUser,
+  generateTokens,
+  updateRefreshToken,
+} from "../../utils/refreshTokenUtils";
 import { withWrappers } from "../../utils/withWrappers";
 
-const verify = <T extends {}>(token: string, secret: string): T => {
-  return jwt.verify(token, secret) as T;
-};
-
-export const getToken = withWrappers(
+ export const getToken = withWrappers(
   async (req: Request, res: Response, session: ClientSession) => {
     const refresh_token = req.body.token;
 
-    if (!refresh_token) {
-      throw new HttpError(401, "Unauthorized");
-    }
+    const username = checkToken(refresh_token);
 
-    const decoded = verify<{ username: string }>(
-      refresh_token,
-      process.env.REFRESH_TOKEN_SECRET!
-    );
+    const user = await checkUser(refresh_token);
 
-    const user = await User.findOne({ refresh_token });
+    const { new_access_token, new_refresh_token } = generateTokens(username);
 
-    if (!user) {
-      throw new HttpError(401, "Unauthorized");
-    }
-
-    const newAccessToken = generateAccessToken({
-      username: decoded.username,
-    });
-    const newRefreshToken = generateRefreshToken({
-      username: decoded.username,
-    });
-
-    const result: UpdateWriteOpResult = await user.updateOne(
-      { refresh_token },
-      { $set: { refresh_token: newRefreshToken } }
-    );
-
-    if (!result.acknowledged) {
-      throw new HttpError(500, "Something went wrong");
-    }
+    await updateRefreshToken(user, new_refresh_token, session);
 
     return res.status(201).json({
-      newAccessToken,
-      newRefreshToken,
+      new_access_token,
+      new_refresh_token,
     });
   }
 );

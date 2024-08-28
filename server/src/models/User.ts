@@ -1,6 +1,8 @@
+import { ObjectId } from "mongodb";
 import { Schema, model } from "mongoose";
 
 export type UserSchemaType = {
+  _id: ObjectId;
   first_name: string;
   last_name: string;
   email: string;
@@ -11,6 +13,7 @@ export type UserSchemaType = {
 
 const UserSchema = new Schema<UserSchemaType>(
   {
+    _id: Schema.Types.ObjectId,
     first_name: {
       type: String,
       required: true,
