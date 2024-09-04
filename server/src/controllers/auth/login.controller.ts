@@ -1,57 +1,56 @@
-import bcrypt from "bcrypt";
-
 import { Request, Response } from "express";
+import { ClientSession } from "mongoose";
 import { HttpError } from "../../error";
-import { User } from "../../models/User";
-import { withErrors } from "../../utils/withErrors";
-import { withTransactions } from "../../utils/withTransactions";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../utils/generateToken";
-import { UpdateWriteOpResult } from "mongoose";
+import TokenService from "../../service/token.service";
+import userService from "../../service/user.service";
+import { LoginCredentials } from "../../types/auth";
+import { withWrappers } from "../../utils/withWrappers";
 
-type LoginCredentials = {
-  email: string;
-  password: string;
-};
+export const login = withWrappers(
+  async (
+    req: Request<any, any, LoginCredentials>,
+    res: Response,
+    session: ClientSession
+  ) => {
+    const { email, password } = req.body;
 
-export const login = withErrors(
-  withTransactions(
-    async (
-      req: Request<any, any, LoginCredentials>,
-      res: Response,
-      session: any
-    ) => {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
+    const user = await userService.findUser(email);
 
-      if (!user) {
-        throw new HttpError(404, "Email or password are incorrect");
-      }
-
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordCorrect) {
-        throw new HttpError(404, "Email or password are incorrect");
-      }
-      const accessToken = generateAccessToken({ username: user.username });
-      const refreshToken = generateRefreshToken({ username: user.username });
-
-      const result: UpdateWriteOpResult = await user.updateOne(
-        { refresh_token1: refreshToken },
-        { session }
-      );
-
-      if (!result.acknowledged) {
-        throw new HttpError(500, "Something went wrong");
-      }
-
-      return res.status(200).json({
-        accessToken,
-        refreshToken,
-      });
+    if (!user) {
+      throw new HttpError(404, "Email or password are incorrect");
     }
-  )
+
+    const isPasswordCorrect = await userService.checkPassword(
+      password,
+      user.password
+    );
+
+    if (!isPasswordCorrect) {
+      throw new HttpError(404, "Email or password are incorrect");
+    }
+
+    const { access_token, refresh_token } = TokenService.generateTokens({
+      username: user.username,
+    });
+
+    const token = await TokenService.saveToken(
+      user._id,
+      refresh_token,
+      session
+    );
+
+    if (!token) {
+      throw new Error("Something went wrong");
+    }
+
+    res.cookie("refresh_token", refresh_token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 30,
+    });
+
+    return res.status(200).json({
+      access_token,
+      refresh_token,
+    });
+  }
 );
-// );

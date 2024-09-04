@@ -1,13 +1,15 @@
-import { Schema, model } from "mongoose";
+import { ObjectId } from "mongodb";
+import { Document, Schema, model } from "mongoose";
 
-export type UserSchemaType = {
+export interface UserSchemaType extends Document {
+  _id: ObjectId;
   first_name: string;
   last_name: string;
   email: string;
   username: string;
   password: string;
   refresh_token: string;
-};
+}
 
 const UserSchema = new Schema<UserSchemaType>(
   {

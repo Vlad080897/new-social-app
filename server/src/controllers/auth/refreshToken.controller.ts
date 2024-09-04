@@ -1,40 +1,49 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { generateAccessToken, generateRefreshToken } from "../../utils/generateToken";
+import { ClientSession } from "mongoose";
+import { HttpError } from "../../error";
+import { default as tokenService } from "../../service/token.service";
+import { withWrappers } from "../../utils/withWrappers";
 
-const verify = <T extends {}>(token: string, secret: string): T => {
-  return jwt.verify(token, secret) as T;
-};
+export const getToken = withWrappers(
+  async (req: Request, res: Response, session: ClientSession) => {
+    const refresh_token = req.body.token;
 
-export const getToken = async (req: Request, res: Response) => {
-  const refreshToken = req.body.token;
-
-  if (!refreshToken) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-
-  try {
-    const decoded = verify<{ username: string }>(
-      refreshToken,
+    const { username } = tokenService.verify<{ username: string }>(
+      refresh_token,
       process.env.REFRESH_TOKEN_SECRET!
     );
 
-    const newAccessToken = generateAccessToken({ username: decoded.username });
-    const newRefreshToken = generateRefreshToken({
-      username: decoded.username,
-    });
+    if (!username) {
+      throw new HttpError(401, "Unauthorized");
+    }
 
-    // Replace token in db
+    const token = await tokenService.findToken(refresh_token);
+
+    if (!token) {
+      throw new HttpError(401, "Unauthorized");
+    }
+
+    const { access_token: new_access_token, refresh_token: new_refresh_token } =
+      tokenService.generateTokens({ username });
+
+    const result = await tokenService.saveToken(
+      token.user,
+      new_refresh_token,
+      session
+    );
+
+    if (!result) {
+      throw new HttpError(500, "Something went wrong");
+    }
+
+    res.cookie("refresh_token", refresh_token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24,
+    });
 
     return res.status(201).json({
-      newAccessToken,
-      newRefreshToken,
-    });
-  } catch (error) {
-    return res.status(401).json({
-      message: "Token has expired",
+      new_access_token,
+      new_refresh_token,
     });
   }
-};
+);

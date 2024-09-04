@@ -1,55 +1,44 @@
 import { Request, Response } from "express";
-import { User } from "../../models/User";
-import { withTransactions } from "../../utils/withTransactions";
+
 import { HttpError } from "../../error";
-import { withErrors } from "../../utils/withErrors";
+import userService from "../../service/user.service";
+import { CredentialsType } from "../../types/auth";
+import { withWrappers } from "../../utils/withWrappers";
+import { UserDto } from "../../dtos/user";
+import { validationResult } from "express-validator";
 
-const bcrypt = require("bcrypt");
+export const signup = withWrappers(
+  async (
+    req: Request<any, any, CredentialsType>,
+    res: Response,
+    session: any
+  ) => {
+    const errors = validationResult(req);
 
-export type CredentialsType = {
-  first_name: string;
-  last_name: string;
-  username: string;
-  password: string;
-  email: string;
-};
-
-export const signup = withErrors(
-  withTransactions(
-    async (
-      req: Request<any, any, CredentialsType>,
-      res: Response,
-      session: any
-    ) => {
-      const { first_name, last_name, username, email, password } = req.body;
-
-      if (!first_name || !last_name || !username || !email || !password) {
-        throw new HttpError(400, "All fields are required");
-      }
-
-      const isUserAlreadyExist = await User.findOne({
-        email,
-      });
-
-      if (isUserAlreadyExist) {
-        throw new HttpError(400, "User already exists");
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      const user = await new User({
-        ...req.body,
-        password: hashedPassword,
-      }).save({ session });
-
-      if (!user) {
-        throw new HttpError(500, "Something went wrong");
-      }
-
-      return res.status(201).json({
-        message: "User created successfully",
-      });
+    if (!errors.isEmpty()) {
+      return;
     }
-  )
+
+    const { email, password } = req.body;
+
+    const user = await userService.findUser(email);
+
+    if (user) {
+      throw new HttpError(400, "User already exists");
+    }
+
+    const hashedPassword = await userService.hashPassword(password);
+
+    const newUser = await userService.createUser(
+      req.body,
+      hashedPassword,
+      session
+    );
+
+    if (!newUser) {
+      throw new HttpError(500, "Something went wrong");
+    }
+
+    return res.status(201).json(new UserDto(newUser));
+  }
 );
