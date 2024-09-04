@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { ClientSession } from "mongoose";
-import { UserSchemaType } from "../../models/User";
+import { HttpError } from "../../error";
 import TokenService from "../../service/token.service";
+import userService from "../../service/user.service";
 import { LoginCredentials } from "../../types/auth";
-import { checkPassword, checkUser } from "../../utils/loginUtils";
 import { withWrappers } from "../../utils/withWrappers";
 
 export const login = withWrappers(
@@ -14,9 +14,20 @@ export const login = withWrappers(
   ) => {
     const { email, password } = req.body;
 
-    const user: UserSchemaType = await checkUser(email);
+    const user = await userService.findUser(email);
 
-    await checkPassword(password, user.password);
+    if (!user) {
+      throw new HttpError(404, "Email or password are incorrect");
+    }
+
+    const isPasswordCorrect = await userService.checkPassword(
+      password,
+      user.password
+    );
+
+    if (!isPasswordCorrect) {
+      throw new HttpError(404, "Email or password are incorrect");
+    }
 
     const { access_token, refresh_token } = TokenService.generateTokens({
       username: user.username,
@@ -34,7 +45,7 @@ export const login = withWrappers(
 
     res.cookie("refresh_token", refresh_token, {
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
+      maxAge: 1000 * 60 * 30,
     });
 
     return res.status(200).json({

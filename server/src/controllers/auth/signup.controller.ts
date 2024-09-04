@@ -1,13 +1,11 @@
 import { Request, Response } from "express";
 
-import { withWrappers } from "../../utils/withWrappers";
-import {
-  checkUser,
-  createUser,
-  hashPassword,
-  validateBody,
-} from "../../utils/signupUtils";
+import { HttpError } from "../../error";
+import userService from "../../service/user.service";
 import { CredentialsType } from "../../types/auth";
+import { withWrappers } from "../../utils/withWrappers";
+import { UserDto } from "../../dtos/user";
+import { validationResult } from "express-validator";
 
 export const signup = withWrappers(
   async (
@@ -15,16 +13,32 @@ export const signup = withWrappers(
     res: Response,
     session: any
   ) => {
-    const { email, password } = validateBody(req.body);
+    const errors = validationResult(req);
 
-    await checkUser(email);
+    if (!errors.isEmpty()) {
+      return;
+    }
 
-    const hashedPassword = await hashPassword(password);
+    const { email, password } = req.body;
 
-    await createUser(req.body, hashedPassword, session);
+    const user = await userService.findUser(email);
 
-    return res.status(201).json({
-      message: "User created successfully",
-    });
+    if (user) {
+      throw new HttpError(400, "User already exists");
+    }
+
+    const hashedPassword = await userService.hashPassword(password);
+
+    const newUser = await userService.createUser(
+      req.body,
+      hashedPassword,
+      session
+    );
+
+    if (!newUser) {
+      throw new HttpError(500, "Something went wrong");
+    }
+
+    return res.status(201).json(new UserDto(newUser));
   }
 );

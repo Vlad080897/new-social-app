@@ -13,7 +13,6 @@ export interface UserSchemaType extends Document {
 
 const UserSchema = new Schema<UserSchemaType>(
   {
-    _id: Schema.Types.ObjectId,
     first_name: {
       type: String,
       required: true,
