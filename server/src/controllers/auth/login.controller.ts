@@ -22,7 +22,20 @@ export const login = withWrappers(
       username: user.username,
     });
 
-    await TokenService.updateRefreshToken(user, refresh_token, session);
+    const token = await TokenService.saveToken(
+      user._id,
+      refresh_token,
+      session
+    );
+
+    if (!token) {
+      throw new Error("Something went wrong");
+    }
+
+    res.cookie("refresh_token", refresh_token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24,
+    });
 
     return res.status(200).json({
       access_token,

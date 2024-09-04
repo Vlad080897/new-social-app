@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
-import { ClientSession, UpdateWriteOpResult } from "mongoose";
-import { UserSchemaType } from "../models/User";
+import { ObjectId } from "mongodb";
+import { ClientSession } from "mongoose";
+import { Token } from "../models/Token";
 
 class TokenService {
   generateTokens(payload: { username: string }) {
@@ -19,17 +20,30 @@ class TokenService {
     return jwt.verify(token, secret) as T;
   }
 
-  async updateRefreshToken(
-    user: UserSchemaType,
+  async saveToken(
+    user: ObjectId,
     refresh_token: string,
     session: ClientSession
   ) {
-    const result: UpdateWriteOpResult = await user.updateOne(
-      { refresh_token },
-      { session }
-    );
+    const tokenData = await Token.findOne({ user });
 
-    return result;
+    if (tokenData) {
+      tokenData.refresh_token = refresh_token;
+
+      return tokenData.save({ session });
+    }
+
+    const token = await Token.create([{ user, refresh_token }], { session });
+
+    return token;
+  }
+
+  async findToken(token: string) {
+    return Token.findOne({ refresh_token: token });
+  }
+
+  async removeToken(token: string) {
+    return Token.deleteOne({ refresh_token: token });
   }
 }
 
