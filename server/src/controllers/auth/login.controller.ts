@@ -25,8 +25,6 @@ export const login = withWrappers(
       user.password
     );
 
-    console.log(isPasswordCorrect);
-
     if (!isPasswordCorrect) {
       throw new HttpError(404, "Invalid email or password");
     }

@@ -6,21 +6,29 @@ import { connectDb } from "./db";
 import authRouter from "./routes/auth";
 import { HttpError } from "./error";
 import { AUTH } from "./consts/endpoints";
+import { log } from "console";
 
 export const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const DEV_PORT: string | number = process.env.DEV_PORT || 3001;
-const TEST_PORT: string | number = process.env.TEST_PORT || 3002;
+const PORT = process.env.PORT || 5000;
 
-const PORT = process.env.NODE_ENV === "test" ? TEST_PORT : DEV_PORT;
+const connectServer = async () => {
+  if (process.env.NODE_ENV === "test") {
+    console.log("You are in test mode");
 
-export const server = app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  await connectDb();
-});
+    return;
+  }
+
+  return app.listen(PORT, async () => {
+    console.log(`Server running on port ${PORT}`);
+    await connectDb();
+  });
+};
+
+connectServer();
 
 app.use(AUTH, authRouter);
 

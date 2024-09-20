@@ -1,6 +1,6 @@
 import supertest from "supertest";
 import { connectTestDb, disconnectDb } from "../../../mockDb";
-import { app, server } from "../../../server";
+import { app } from "../../../server";
 import { AUTH } from "../../../consts/endpoints";
 import { User } from "../../../models/User";
 import bcrypt from "bcrypt";
@@ -26,7 +26,6 @@ describe("login controller", () => {
 
   afterAll(async () => {
     await disconnectDb();
-    server.close();
   });
 
   test("should login user with correct credentials", async () => {
