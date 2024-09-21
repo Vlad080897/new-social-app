@@ -11,7 +11,7 @@ const connectTestDb = async () => {
 
   await mongoose.connect(uri);
 
-  console.log("Connected to test db");
+  console.info("Connected to test db");
 };
 
 const disconnectDb = async () => {
@@ -19,7 +19,7 @@ const disconnectDb = async () => {
   await mongoose.connection.close();
   await mongoose.disconnect();
 
-  console.log("Disconnected from test db");
+  console.info("Disconnected from test db");
 };
 
 export { connectTestDb, disconnectDb };

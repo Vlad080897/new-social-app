@@ -12,7 +12,6 @@ const currentUser = {
   first_name: "test",
 };
 
-// @ts-ignore
 const request = supertest(app);
 
 describe("signup controller", () => {

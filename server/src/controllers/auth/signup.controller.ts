@@ -7,6 +7,7 @@ import { userValidationRules } from "../../helpers/validatorsSchemas";
 import userService from "../../service/user.service";
 import { CredentialsType } from "../../types/auth";
 import { withWrappers } from "../../utils/withWrappers";
+import { ClientSession } from "mongoose";
 
 export const signup = [
   ...userValidationRules,
@@ -14,7 +15,7 @@ export const signup = [
     async (
       req: Request<any, any, CredentialsType>,
       res: Response,
-      session: any
+      session: ClientSession
     ) => {
       const errors = validationResult(req);
 

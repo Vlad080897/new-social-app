@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { User } from "../models/User";
 import { CredentialsType } from "../types/auth";
+import { ClientSession } from "mongoose";
 
 class UserService {
   checkPassword(password: string, userPassword: string) {
@@ -16,7 +17,11 @@ class UserService {
     return bcrypt.hash(password, salt);
   }
 
-  async createUser(body: CredentialsType, password: string, session: any) {
+  async createUser(
+    body: CredentialsType,
+    password: string,
+    session: ClientSession
+  ) {
     const user = await new User({
       ...body,
       password,
