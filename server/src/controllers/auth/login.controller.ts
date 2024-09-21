@@ -17,7 +17,7 @@ export const login = withWrappers(
     const user = await userService.findUser(email);
 
     if (!user) {
-      throw new HttpError(404, "Email or password are incorrect");
+      throw new HttpError(404, "Invalid email or password");
     }
 
     const isPasswordCorrect = await userService.checkPassword(
@@ -26,7 +26,7 @@ export const login = withWrappers(
     );
 
     if (!isPasswordCorrect) {
-      throw new HttpError(404, "Email or password are incorrect");
+      throw new HttpError(404, "Invalid email or password");
     }
 
     const { access_token, refresh_token } = TokenService.generateTokens({
@@ -40,7 +40,7 @@ export const login = withWrappers(
     );
 
     if (!token) {
-      throw new Error("Something went wrong");
+      throw new HttpError(500, "Something went wrong");
     }
 
     res.cookie("refresh_token", refresh_token, {

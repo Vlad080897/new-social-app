@@ -1,24 +1,36 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 import bodyParser from "body-parser";
 import express, { NextFunction, Request, Response } from "express";
 import { connectDb } from "./db";
 import authRouter from "./routes/auth";
 import { HttpError } from "./error";
+import { AUTH } from "./consts/endpoints";
 
-const app = express();
+export const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const PORT: string | number = process.env.DEV_PORT || 3001;
+const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  await connectDb();
-});
+const connectServer = async () => {
+  if (process.env.NODE_ENV === "test") {
+    console.info("You are in test mode");
 
-app.use("/api/v1/auth", authRouter);
+    return;
+  }
+
+  return app.listen(PORT, async () => {
+    console.info(`Server running on port ${PORT}`);
+    await connectDb();
+  });
+};
+
+connectServer();
+
+app.use(AUTH, authRouter);
 
 app.use((error: HttpError, _: Request, res: Response, __: NextFunction) => {
   return res.status(error.statusCode || 500).json({
