@@ -5,8 +5,10 @@ import bodyParser from "body-parser";
 import express, { NextFunction, Request, Response } from "express";
 import { connectDb } from "./db";
 import authRouter from "./routes/auth";
+import postRouter from "./routes/posts";
 import { HttpError } from "./error";
-import { AUTH } from "./consts/endpoints";
+import { AUTH, POSTS } from "./consts/endpoints";
+import { restricted } from "./middlewares/restricted";
 
 export const app = express();
 
@@ -31,6 +33,7 @@ const connectServer = async () => {
 connectServer();
 
 app.use(AUTH, authRouter);
+app.use(POSTS, restricted, postRouter);
 
 app.use((error: HttpError, _: Request, res: Response, __: NextFunction) => {
   return res.status(error.statusCode || 500).json({
