@@ -10,6 +10,10 @@ const PostSchema = new Schema({
     type: Date,
   },
 
+  updated_at: {
+    type: Date,
+  },
+
   user: {
     type: Schema.Types.ObjectId,
     ref: "Users",

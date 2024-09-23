@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { UserDto } from "../../dtos/user";
 import { HttpError } from "../../error";
-import { userValidationRules } from "../../helpers/validatorsSchemas";
+import { userValidationRules } from "../../consts/validatorsSchemas";
 import userService from "../../service/user.service";
 import { CredentialsType } from "../../types/auth";
 import { withWrappers } from "../../utils/withWrappers";
