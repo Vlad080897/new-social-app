@@ -14,7 +14,7 @@ export const login = withWrappers(
   ) => {
     const { email, password } = req.body;
 
-    const user = await userService.findUser(email);
+    const user = await userService.findUserByEmail(email);
 
     if (!user) {
       throw new HttpError(404, "Invalid email or password");
