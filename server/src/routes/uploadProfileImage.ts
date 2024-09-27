@@ -1,17 +1,10 @@
 import express from "express";
 import uploadProfileImage from "../controllers/profileImage/profileImage.config";
-import {
-  fileErrorsHandler,
-  uploadProfileImageController,
-} from "../controllers/profileImage/profileImage.controller";
+import { uploadProfileImageController } from "../controllers/profileImage/profileImage.controller";
+import { fileErrors } from "../middlewares/fileError";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  uploadProfileImage,
-  fileErrorsHandler,
-  uploadProfileImageController
-);
+router.post("/", uploadProfileImage, fileErrors, uploadProfileImageController);
 
 export default router;

@@ -38,6 +38,7 @@
   "scripts": {
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "start": "nodemon --watch \"*.ts\" --exec \"ts-node\" ./src/server.ts",
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "check-types": "tsc --noEmit"
   }
 }
