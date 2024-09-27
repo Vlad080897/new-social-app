@@ -1,4 +1,5 @@
 import { body } from "express-validator";
+import Joi from "joi";
 
 export const userValidationRules = [
   body("first_name")
@@ -31,3 +32,8 @@ export const userValidationRules = [
     .isString()
     .withMessage("Refresh token must be a string if provided"),
 ];
+
+export const postSchema = Joi.object({
+  content: Joi.string().required(),
+  user: Joi.string().required(),
+});
