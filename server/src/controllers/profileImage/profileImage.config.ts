@@ -2,7 +2,7 @@ import { Request } from "express";
 import fs from "fs";
 import multer from "multer";
 import path from "path";
-import { getProfileImageFilters } from "../../consts/profileImage";
+import { getProfileImageFilters, ONE_MB } from "../../consts/profileImage";
 
 const getUploadDir = () => {
   const uploadDir = path.join(__dirname, "../../public/images");
@@ -42,7 +42,7 @@ const fileFilter = (
 const uploadProfileImage = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 100 },
+  limits: { fileSize: ONE_MB },
 }).single("profileImage");
 
 export default uploadProfileImage;

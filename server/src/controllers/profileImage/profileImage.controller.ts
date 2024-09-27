@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { HttpError } from "../../error";
 import { handleMulterError } from "../../utils/errorsUtils";
 import { MulterError } from "multer";
+import { STATUS_CODE } from "../../consts/statusCodes";
 
 export const uploadProfileImageController = async (
   req: Request,
@@ -10,10 +11,12 @@ export const uploadProfileImageController = async (
   const file = req.file;
 
   if (!file) {
-    return res.status(400).send("No file uploaded");
+    return res.status(STATUS_CODE.BAD_REQUEST).send("No file uploaded");
   }
 
-  res.status(201).json({ message: "File uploaded successfully" });
+  return res
+    .status(STATUS_CODE.CREATED)
+    .json({ message: "File uploaded successfully" });
 };
 
 export const fileErrorsHandler = (
