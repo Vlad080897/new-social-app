@@ -1,8 +1,8 @@
-import { Post } from "../models/Post";
-import { User } from "../models/User";
-import { HttpError } from "../error";
 import { postSchema } from "../consts/validatorsSchemas";
+import { HttpError } from "../error";
+import { Post } from "../models/Post";
 import { PostType } from "../types/post";
+import userService from "./user.service";
 
 class PostsService {
   async getPosts() {
@@ -21,7 +21,7 @@ class PostsService {
     }
 
     const userId = body.user;
-    const userData = await User.findById(userId).select("username");
+    const userData = await userService.findUserById(userId);
 
     if (!userData) {
       throw new HttpError(400, "No such user exists");
@@ -32,7 +32,7 @@ class PostsService {
       created_at: new Date(),
       user: {
         _id: userId,
-        username: userData?.username,
+        username: userData.username,
       },
     };
 

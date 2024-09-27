@@ -31,14 +31,17 @@
     "@types/node": "^20.14.12",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.11.0",
+    "eslint-plugin-node": "^11.1.0",
     "globals": "^15.9.0",
     "nodemon": "^3.1.4",
     "typescript-eslint": "^8.6.0"
   },
   "scripts": {
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "check": "tsc --noEmit",
     "start": "nodemon --watch \"*.ts\" --exec \"ts-node\" ./src/server.ts",
     "test": "jest --watch",
+    "test:coverage": "jest --coverage",
     "check-types": "tsc --noEmit"
   }
 }
