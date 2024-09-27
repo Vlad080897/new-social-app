@@ -25,7 +25,7 @@ export const signup = [
 
       const { email, password } = req.body;
 
-      const user = await userService.findUser(email);
+      const user = await userService.findUserByEmail(email);
 
       if (user) {
         throw new HttpError(400, "User already exists");
