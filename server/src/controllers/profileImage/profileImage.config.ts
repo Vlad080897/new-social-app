@@ -1,27 +1,6 @@
 import { Request } from "express";
-import fs from "fs";
 import multer from "multer";
-import path from "path";
 import { getProfileImageFilters, ONE_MB } from "../../consts/profileImage";
-
-const getUploadDir = () => {
-  const uploadDir = path.join(__dirname, "../../public/images");
-
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-  return uploadDir;
-};
-
-const storage = multer.diskStorage({
-  destination: (_, __, cb) => {
-    const newDir = getUploadDir();
-    cb(null, newDir);
-  },
-  filename: (_, file, cb) => {
-    cb(null, file.originalname);
-  },
-});
 
 const fileFilter = (
   _: Request,
@@ -40,7 +19,7 @@ const fileFilter = (
 };
 
 const uploadProfileImage = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: { fileSize: ONE_MB },
 }).single("profileImage");
