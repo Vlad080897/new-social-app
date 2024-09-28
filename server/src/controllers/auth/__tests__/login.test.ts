@@ -1,15 +1,15 @@
 import supertest from "supertest";
-import { connectTestDb, disconnectDb } from "../../../mockDb";
 import { app } from "../../../server";
 import { AUTH } from "../../../consts/endpoints";
 import { User } from "../../../models/User";
 import bcrypt from "bcrypt";
+import mongoDb from "../../../service/db.service";
 
 const request = supertest(app);
 
 describe("login controller", () => {
   beforeAll(async () => {
-    await connectTestDb();
+    await mongoDb.connectTestDb();
 
     const hashedPassword = await bcrypt.hash("password", 10);
 
@@ -25,7 +25,7 @@ describe("login controller", () => {
   });
 
   afterAll(async () => {
-    await disconnectDb();
+    await mongoDb.close();
   });
 
   test("should login user with correct credentials", async () => {

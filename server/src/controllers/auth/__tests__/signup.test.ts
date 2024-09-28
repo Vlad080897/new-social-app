@@ -1,8 +1,8 @@
 import supertest from "supertest";
-import { connectTestDb, disconnectDb } from "../../../mockDb";
 import { User } from "../../../models/User";
 import { app } from "../../../server";
 import { AUTH } from "../../../consts/endpoints";
+import mongoDb from "../../../service/db.service";
 
 const currentUser = {
   email: "test@gmail.com",
@@ -16,7 +16,7 @@ const request = supertest(app);
 
 describe("signup controller", () => {
   beforeAll(async () => {
-    await connectTestDb();
+    await mongoDb.connectTestDb();
 
     const user = {
       ...currentUser,
@@ -27,7 +27,7 @@ describe("signup controller", () => {
   });
 
   afterAll(async () => {
-    await disconnectDb();
+    await mongoDb.close();
   });
 
   test("should not create user if user already exists", async () => {

@@ -2,11 +2,11 @@ import supertest from "supertest";
 import bcrypt from "bcrypt";
 
 import { app } from "../../../server";
-import { connectTestDb, disconnectDb } from "../../../mockDb";
 import { Post } from "../../../models/Post";
 import { AUTH, POSTS } from "../../../consts/endpoints";
 import { User } from "../../../models/User";
 import mongoose from "mongoose";
+import mongoDb from "../../../service/db.service";
 
 const request = supertest(app);
 
@@ -15,7 +15,7 @@ let userId: mongoose.Types.ObjectId;
 
 describe("posts controller", () => {
   beforeAll(async () => {
-    await connectTestDb();
+    await mongoDb.connectTestDb();
 
     const user1 = new User({
       username: "User One",
@@ -61,7 +61,7 @@ describe("posts controller", () => {
   });
 
   afterAll(async () => {
-    await disconnectDb();
+    await mongoDb.close();
   });
 
   test("should send all posts", async () => {
@@ -73,7 +73,8 @@ describe("posts controller", () => {
     expect(res.body.length).toBe(2);
     expect(res.body[0].user).toBeDefined();
     expect(res.body[0].user.username).toBe("User One");
-    expect(Object.keys(res.body[0].user).length).toBe(2);
+    expect(res.body[0].user.user_image).toBeDefined();
+    expect(Object.keys(res.body[0].user).length).toBe(3);
   });
 
   test("should send a post", async () => {

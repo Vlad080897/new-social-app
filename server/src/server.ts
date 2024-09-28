@@ -3,13 +3,13 @@ dotenv.config();
 
 import bodyParser from "body-parser";
 import express, { NextFunction, Request, Response } from "express";
-import { connectDb } from "./db";
+import { AUTH, POSTS, PROFILE_IMAGE } from "./consts/endpoints";
+import { HttpError } from "./error";
+import { restricted } from "./middlewares/restricted";
 import authRouter from "./routes/auth";
 import postRouter from "./routes/posts";
 import profileImage from "./routes/profileImage";
-import { HttpError } from "./error";
-import { AUTH, POSTS, PROFILE_IMAGE } from "./consts/endpoints";
-import { restricted } from "./middlewares/restricted";
+import mongoDb from "./service/db.service";
 
 export const app = express();
 
@@ -26,7 +26,7 @@ const connectServer = async () => {
 
   return app.listen(PORT, async () => {
     console.info(`Server running on port ${PORT}`);
-    await connectDb();
+    await mongoDb.connect();
   });
 };
 
