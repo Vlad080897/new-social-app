@@ -34,7 +34,7 @@ connectServer();
 
 app.use(AUTH, authRouter);
 app.use(POSTS, restricted, postRouter);
-app.use(PROFILE_IMAGE, profileImage);
+app.use(PROFILE_IMAGE, restricted, profileImage);
 
 app.use((error: HttpError, _: Request, res: Response, __: NextFunction) => {
   return res.status(error.statusCode || 500).json({

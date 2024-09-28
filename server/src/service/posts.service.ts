@@ -6,7 +6,7 @@ import userService from "./user.service";
 
 class PostsService {
   async getPosts() {
-    return await Post.find().populate("user", "username");
+    return await Post.find().populate("user", "username user_image");
   }
 
   async getPost(id: string) {
