@@ -8,7 +8,7 @@ import authRouter from "./routes/auth";
 import postRouter from "./routes/posts";
 import uploadImageRouter from "./routes/uploadProfileImage";
 import { HttpError } from "./error";
-import { AUTH, POSTS, SAVE_PROFILE_IMAGE } from "./consts/endpoints";
+import { AUTH, POSTS, PROFILE_IMAGE } from "./consts/endpoints";
 import { restricted } from "./middlewares/restricted";
 
 export const app = express();
@@ -35,7 +35,7 @@ connectServer();
 
 app.use(AUTH, authRouter);
 app.use(POSTS, restricted, postRouter);
-app.use(SAVE_PROFILE_IMAGE, uploadImageRouter);
+app.use(PROFILE_IMAGE, uploadImageRouter);
 
 app.use((error: HttpError, _: Request, res: Response, __: NextFunction) => {
   return res.status(error.statusCode || 500).json({

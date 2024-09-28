@@ -5,6 +5,11 @@ import { fileErrors } from "../middlewares/fileError";
 
 const router = express.Router();
 
-router.post("/", uploadProfileImage, fileErrors, uploadProfileImageController);
+router.post(
+  "/:id",
+  uploadProfileImage,
+  fileErrors,
+  uploadProfileImageController
+);
 
 export default router;

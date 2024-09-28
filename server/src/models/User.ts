@@ -9,6 +9,11 @@ export interface UserSchemaType extends Document {
   username: string;
   password: string;
   refresh_token: string;
+  user_image: {
+    path: string;
+    filename: string;
+    created_at: Date;
+  };
 }
 
 const UserSchema = new Schema<UserSchemaType>(
@@ -32,6 +37,13 @@ const UserSchema = new Schema<UserSchemaType>(
     password: {
       type: String,
       required: true,
+    },
+    user_image: {
+      path: { type: String, default: "" },
+      filename: { type: String, default: "" },
+      created_at: { type: Date, default: Date.now },
+
+      default: {},
     },
     refresh_token: String,
   },

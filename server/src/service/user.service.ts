@@ -3,6 +3,8 @@ import { User } from "../models/User";
 import { CredentialsType } from "../types/auth";
 import { ClientSession } from "mongoose";
 import mongoose from "mongoose";
+import { HttpError } from "../error";
+import { STATUS_CODE } from "../consts/statusCodes";
 
 class UserService {
   checkPassword(password: string, userPassword: string) {
@@ -15,6 +17,18 @@ class UserService {
 
   async findUserById(id: mongoose.Types.ObjectId) {
     return await User.findById(id);
+  }
+
+  async saveProfileImage(id: mongoose.Types.ObjectId, body: any) {
+    const user = await this.findUserById(id);
+
+    if (!user) {
+      throw new HttpError(STATUS_CODE.NOT_FOUND, "User not found");
+    }
+
+    user.user_image = body;
+
+    await user.save();
   }
 
   async hashPassword(password: string) {
