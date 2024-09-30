@@ -5,6 +5,8 @@ class MongoDb {
   async connect() {
     try {
       await mongoose.connect(process.env.MONGO_URI!);
+
+      console.info("Connected to MongoDB");
     } catch (error) {
       console.error("Error connecting to MongoDB", error);
     }
