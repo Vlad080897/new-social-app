@@ -41,12 +41,15 @@ class UserService {
     password: string,
     session: ClientSession
   ) {
-    const user = await new User({
+    return new User({
       ...body,
       password,
     }).save({ session });
+  }
 
-    return user;
+  async searchUsers(query: string) {
+    const regex = new RegExp(query, "i");
+    return await User.find({ username: regex });
   }
 }
 
