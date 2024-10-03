@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 
 import { validationResult } from "express-validator";
 import { UserDto } from "../../dtos/user";
-import { HttpError } from "../../error";
 import { userValidationRules } from "../../consts/validatorsSchemas";
 import userService from "../../service/user.service";
 import { CredentialsType } from "../../types/auth";
@@ -28,7 +27,7 @@ export const signup = [
       const user = await userService.findUserByEmail(email);
 
       if (user) {
-        throw new HttpError(400, "User already exists");
+        return res.status(400).json({ message: "User already exists" });
       }
 
       const hashedPassword = await userService.hashPassword(password);
@@ -38,10 +37,6 @@ export const signup = [
         hashedPassword,
         session
       );
-
-      if (!newUser) {
-        throw new HttpError(500, "Something went wrong");
-      }
 
       return res.status(201).json(new UserDto(newUser));
     }
